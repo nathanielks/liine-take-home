@@ -121,18 +121,21 @@ function getRangeHours(range: RangeMatch) {
 		// If it opens at night but closes in the morning, it's the next day
 		(openPeriod === "pm" && closePeriod === "am")
 	) {
-		return [
+		const items = [
 			{
 				time_open,
 				time_closed: 2400,
 				weekdayOffset: 0,
 			},
-			{
+		];
+		if (time_closed > 0) {
+			items.push({
 				time_open: 0,
 				time_closed,
 				weekdayOffset: 1,
-			},
-		];
+			});
+		}
+		return items;
 	}
 	// Otherwise it's all within the same day
 	return [
@@ -145,10 +148,9 @@ function getRangeHours(range: RangeMatch) {
 }
 
 function parseTime(time: string, period: TTimePeriod) {
-	const [hour, minutes] = time.split(":");
-	return (
-		Number(hour) * 100 + Number(minutes ?? 0) + (period === "pm" ? 1200 : 0)
-	);
+	const [_hour, minutes] = time.split(":");
+	const hour = time.startsWith("12") && period === "am" ? 0 : Number(_hour);
+	return hour * 100 + Number(minutes ?? 0) + (period === "pm" ? 1200 : 0);
 }
 
 export function parseRow(row: string[]) {

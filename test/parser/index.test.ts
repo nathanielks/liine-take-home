@@ -114,6 +114,16 @@ describe("CSV Parser", () => {
 	test("generates range objects", () => {
 		const tests: TestItem[] = [
 			{
+				input: "Mon 11 am - 12 am",
+				expectation: [
+					{
+						weekday: 1,
+						time_open: 1100,
+						time_closed: 2400,
+					},
+				],
+			},
+			{
 				input: "Fri 11:00 pm - 1:30 am",
 				expectation: [
 					{
