@@ -22,6 +22,7 @@ export function parseHours(input: string) {
 	}
 
 	// NOTE: in cases where closeTime is _the next day_, perhaps we should diff the open and close times and store the diff instead of the open and close times? Store the open time as a time, and then store open hours.
+	// Oooo or it detects that it's rolled over into the next day and it should end the first day at midnight and add an additional entry for the next day
 	// QSTN: But what about cases where restaurants are open for periods during the day? That's not presently part of the problem set, so not going to worry about that.
 	return matches;
 }
