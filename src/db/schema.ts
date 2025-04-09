@@ -1,8 +1,5 @@
 import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-// TODO: schema for restaurants
-// TODO: schema for restaurant hours
-
 export const restaurantsTable = sqliteTable("restaurants", {
 	id: int().primaryKey({ autoIncrement: true }),
 	name: text().notNull(),

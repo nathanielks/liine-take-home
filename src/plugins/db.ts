@@ -8,11 +8,7 @@ import { Writable } from "node:stream";
 import { parseRow } from "../parser/index.js";
 import { restaurantsTable, restaurantHoursTable } from "../db/schema.js";
 
-export type DbPluginOptions = {};
-
-export default fp<DbPluginOptions>(async (fastify, opts) => {
-	// TODO: implement query method
-
+export default fp(async (fastify, opts) => {
 	const db = drizzle({
 		connection: { url: ":memory:" },
 	});
