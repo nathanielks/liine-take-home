@@ -6,9 +6,12 @@ WORKDIR /usr/src/app
 # Add Tini to ensure process signal forwarding works
 RUN apt-get update -y && apt-get install tini
 
+COPY drizzle/ ./drizzle/
 COPY src/ ./src/
 COPY package*.json .
 COPY tsconfig.json .
+COPY drizzle.config.ts .
+COPY restaurants.csv .
 
 RUN npm ci
 RUN npm run build:ts

@@ -2,32 +2,21 @@ import fp from "fastify-plugin";
 import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { createReadStream } from "node:fs";
-import { stat } from "node:fs/promises";
 import { pipeline } from "node:stream/promises";
 import { parse } from "@fast-csv/parse";
 import { Writable } from "node:stream";
 import { parseRow } from "../parser/index.js";
 import { restaurantsTable, restaurantHoursTable } from "../db/schema.js";
 
-async function dbExists() {
-	try {
-		await stat("file.db");
-		return true;
-	} catch (error) {
-		return false;
-	}
-}
-
 export type DbPluginOptions = {};
 
 export default fp<DbPluginOptions>(async (fastify, opts) => {
 	// TODO: implement query method
 
-	const shouldSeed = !(await dbExists());
 	const db = drizzle({
-		connection: { url: process.env.DB_FILE_NAME ?? "file:file.db" },
+		connection: { url: ":memory:" },
 	});
-	await initDb(db, { shouldSeed });
+	await initDb(db, { shouldSeed: true });
 
 	fastify.decorate("db", db);
 });
