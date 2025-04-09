@@ -80,18 +80,23 @@ function getDaysOfWeekForRange(
 	startDay?: TDayOfWeek,
 	endDay?: TDayOfWeek,
 ): TWeekdayIndex[] {
+	console.log("ehllo?", startDay, endDay);
 	if (!startDay) return [];
 	const rangeStart = dayOfTheWeekIndexes[startDay] as TWeekdayIndex;
 	if (!endDay) return [rangeStart];
-	const rangeEnd = dayOfTheWeekIndexes[endDay];
-	const entries: TWeekdayIndex[] = [];
 
+	// NOTE: because ranges can overlap into the next week (eg Fri-Sun), we add 7
+	// to the end of the range and use a modulo to reset that value backwithin
+	// the 0-6 range of indexes.
+	const divisor = 7;
+	const rangeEnd = dayOfTheWeekIndexes[endDay] + divisor;
 	console.log("rangestart", rangeStart, "rangeEnd", rangeEnd);
+	const entries: TWeekdayIndex[] = [];
 	for (let i = rangeStart; i <= rangeEnd; i++) {
-		console.log("i", i);
-		entries.push(i);
+		console.log("i", i, i % divisor);
+		entries.push((i % 7) as TWeekdayIndex);
 	}
-	return entries;
+	return entries.sort();
 }
 
 function getRangeHours(range: RangeMatch) {
