@@ -41,15 +41,15 @@ export function parseHourRanges(input: string): RangeMatch[] {
 
 type TWeekdayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-type TimeRangeEntry = {
+type TTimeRangeEntry = {
 	weekday: TWeekdayIndex;
 	// TODO: can I set this to be more specific?
 	time_open: number;
 	time_closed: number;
 };
 
-export function generateRangeEntries(ranges: RangeMatch[]): TimeRangeEntry[] {
-	const entries: TimeRangeEntry[] = [];
+export function generateRangeEntries(ranges: RangeMatch[]): TTimeRangeEntry[] {
+	const entries: TTimeRangeEntry[] = [];
 	for (const range of ranges) {
 		const range0Days = getDaysOfWeekForRange(
 			range.range0Start,
@@ -142,7 +142,11 @@ function parseTime(time: string, period: TTimePeriod) {
 	return hour * 100 + Number(minutes ?? 0) + (period === "pm" ? 1200 : 0);
 }
 
-export function parseRow(row: string[]) {
+export interface RestaurantCsvRow {
+	name: string;
+	entries: TTimeRangeEntry[];
+}
+export function parseRow(row: string[]): RestaurantCsvRow {
 	const [name, hours] = row;
 	const ranges = parseHourRanges(hours);
 	const entries = generateRangeEntries(ranges);

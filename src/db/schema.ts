@@ -10,7 +10,7 @@ export const restaurantsTable = sqliteTable("restaurants", {
 
 export const restaurantHoursTable = sqliteTable("restaurant_hours", {
 	restaurant_id: int().notNull(),
-	day_of_week: int().notNull(),
+	weekday: int().notNull(),
 	time_open: int().notNull(),
 	time_closed: int().notNull(),
 });

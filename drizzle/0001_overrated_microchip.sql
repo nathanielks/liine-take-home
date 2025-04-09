@@ -1,0 +1,1 @@
+ALTER TABLE `restaurant_hours` RENAME COLUMN "day_of_week" TO "weekday";

@@ -2,58 +2,60 @@ import fp from "fastify-plugin";
 import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { createReadStream } from "node:fs";
+import { stat } from "node:fs/promises";
 import { pipeline } from "node:stream/promises";
 import { parse } from "@fast-csv/parse";
 import { Writable } from "node:stream";
+import { parseRow } from "../parser/index.js";
+import { restaurantsTable, restaurantHoursTable } from "../db/schema.js";
 
-// import { eq } from 'drizzle-orm';
-// import { usersTable } from '../db/schema.js';
+async function dbExists() {
+	try {
+		await stat("file.db");
+		return true;
+	} catch (error) {
+		return false;
+	}
+}
 
 export type DbPluginOptions = {};
 
 export default fp<DbPluginOptions>(async (fastify, opts) => {
-	// TODO: set up drizzle
-	// TODO: parse restaurants.csv
-	// TODO: seed db
 	// TODO: implement query method
 
-	// You can specify any property from the libsql connection options
+	const shouldSeed = !(await dbExists());
 	const db = drizzle({
 		connection: { url: process.env.DB_FILE_NAME ?? "file:file.db" },
 	});
-	await initDb(db);
+	await initDb(db, { shouldSeed });
 
-	fastify.decorate("db", function () {
-		return db;
-	});
-
-	fastify.decorate("queryRestaurants", function (): string[] {
-		return [];
-	});
+	fastify.decorate("db", db);
 });
 
 // When using .decorate you have to specify added properties for Typescript
 declare module "fastify" {
 	export interface FastifyInstance {
-		db: typeof drizzle;
+		db: LibSQLDatabase;
 		queryRestaurants(): string[];
 	}
 }
 
-type CsvRow = {
-	name: string;
-	hours: string;
-};
-async function initDb(db: LibSQLDatabase) {
+async function initDb(db: LibSQLDatabase, { shouldSeed = false } = {}) {
 	await migrate(db, {
 		migrationsFolder: "./drizzle",
 	});
 
-	const csvStream = createReadStream("./restaurants.csv");
-	const parseStream = parse({ headers: true });
-	const seedStream = new DatabaseSeedStream(db);
-	parseStream.write("name,hours\n");
-	await pipeline(csvStream, parseStream, seedStream);
+	if (shouldSeed) {
+		const csvStream = createReadStream("./restaurants.csv");
+		const parseStream = parse({ headers: true });
+		const seedStream = new DatabaseSeedStream(db);
+		await pipeline(csvStream, parseStream, seedStream);
+	}
+}
+
+interface RestaurantCsvRow {
+	"Restaurant Name": string;
+	Hours: string;
 }
 
 class DatabaseSeedStream extends Writable {
@@ -63,12 +65,21 @@ class DatabaseSeedStream extends Writable {
 		this.db = db;
 	}
 
-	_write(
-		chunk: CsvRow,
+	async _write(
+		{ "Restaurant Name": _name, Hours: _hours }: RestaurantCsvRow,
 		encoding: BufferEncoding,
 		callback: (error?: Error | null) => void,
 	) {
-		console.log("chunk", chunk);
+		const { name, entries } = parseRow([_name, _hours]);
+		const [inserted] = await this.db
+			.insert(restaurantsTable)
+			.values({ name })
+			.returning();
+		const mappedEntries = entries.map((entry) => ({
+			...entry,
+			restaurant_id: inserted.id,
+		}));
+		await this.db.insert(restaurantHoursTable).values(mappedEntries);
 		callback();
 	}
 }
