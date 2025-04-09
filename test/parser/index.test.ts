@@ -1,10 +1,13 @@
 import { describe, test } from "node:test";
 import * as assert from "node:assert";
-import { parseHours } from "../../src/parser/index.js";
+import {
+	generateRangeEntries,
+	parseHourRanges,
+} from "../../src/parser/index.js";
 
 describe("CSV Parser", () => {
-	test("parses rows", (t) => {
-		assert.deepEqual(parseHours("Mon-Sun 11:00 am - 10 pm"), [
+	test("parses ranges", (t) => {
+		assert.deepEqual(parseHourRanges("Mon-Sun 11:00 am - 10 pm"), [
 			{
 				range0Start: "Mon",
 				range0End: "Sun",
@@ -16,7 +19,7 @@ describe("CSV Parser", () => {
 				closePeriod: "pm",
 			},
 		]);
-		assert.deepEqual(parseHours("Mon-Fri, Sat 11 am - 12 pm"), [
+		assert.deepEqual(parseHourRanges("Mon-Fri, Sat 11 am - 12 pm"), [
 			{
 				range0Start: "Mon",
 				range0End: "Fri",
@@ -29,7 +32,7 @@ describe("CSV Parser", () => {
 			},
 		]);
 		assert.deepEqual(
-			parseHours(
+			parseHourRanges(
 				"Mon-Wed 5 pm - 12:30 am / Thu-Fri 5 pm - 1:30 am / Sat 3 pm - 1:30 am / Sun 3 pm - 11:30 pm",
 			),
 			[
@@ -75,5 +78,66 @@ describe("CSV Parser", () => {
 				},
 			],
 		);
+	});
+
+	test.only("generates range objects", () => {
+		// input: "Mon-Sun 11:00 am - 10 pm",
+		const tests = [
+			{
+				input: "Mon 11:00 am - 10 pm",
+				expectation: [
+					{
+						weekday: 1,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+				],
+			},
+			{
+				input: "Sun-Sat 11:00 am - 10 pm",
+				expectation: [
+					{
+						weekday: 0,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+					{
+						weekday: 1,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+					{
+						weekday: 2,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+					{
+						weekday: 3,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+					{
+						weekday: 4,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+					{
+						weekday: 5,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+					{
+						weekday: 6,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+				],
+			},
+		];
+		for (const { input, expectation } of tests) {
+			const ranges = parseHourRanges(input);
+			const entries = generateRangeEntries(ranges);
+			assert.deepEqual(entries, expectation);
+		}
 	});
 });
