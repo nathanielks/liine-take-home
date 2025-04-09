@@ -1,6 +1,6 @@
 # Liine take home assessment
 
-Hi, Liine hiring team! In this repo you will find my solution for returning a list of restaurant names that are open for a given datetime string.
+Hi, Liine hiring team! In this repo you will find my solution for the [take-home assessment](https://gist.github.com/sharpmoose/d25487b913a08f6a6e6059c07035a041) of returning a list of restaurant names that are open for a given datetime string.
 
 ## Getting Started
 
