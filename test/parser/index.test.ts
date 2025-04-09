@@ -5,9 +5,15 @@ import {
 	parseHourRanges,
 } from "../../src/parser/index.js";
 
+interface TestItem {
+	enabled?: boolean;
+	input: any;
+	expectation: any;
+}
+
 describe("CSV Parser", () => {
 	test("parses ranges", (t) => {
-		const tests = [
+		const tests: TestItem[] = [
 			{
 				input: "Mon-Sun 11:00 am - 10 pm",
 				expectation: [
@@ -106,10 +112,8 @@ describe("CSV Parser", () => {
 	});
 
 	test("generates range objects", () => {
-		// input: "Mon-Sun 11:00 am - 10 pm",
-		const tests = [
+		const tests: TestItem[] = [
 			{
-				enabled: false,
 				input: "Mon 11:00 am - 10 pm",
 				expectation: [
 					{
@@ -140,7 +144,46 @@ describe("CSV Parser", () => {
 				],
 			},
 			{
-				enabled: false,
+				input: "Mon-Sun 11:00 am - 10 pm",
+				expectation: [
+					{
+						weekday: 0,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+					{
+						weekday: 1,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+					{
+						weekday: 2,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+					{
+						weekday: 3,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+					{
+						weekday: 4,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+					{
+						weekday: 5,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+					{
+						weekday: 6,
+						time_open: 1100,
+						time_closed: 2200,
+					},
+				],
+			},
+			{
 				input: "Sun-Sat 11:00 am - 10 pm",
 				expectation: [
 					{

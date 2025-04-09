@@ -91,12 +91,12 @@ function getDaysOfWeekForRange(
 	const divisor = 7;
 	const rangeEnd = dayOfTheWeekIndexes[endDay] + divisor;
 	console.log("rangestart", rangeStart, "rangeEnd", rangeEnd);
-	const entries: TWeekdayIndex[] = [];
+	const set = new Set<TWeekdayIndex>();
 	for (let i = rangeStart; i <= rangeEnd; i++) {
 		console.log("i", i, i % divisor);
-		entries.push((i % 7) as TWeekdayIndex);
+		set.add((i % 7) as TWeekdayIndex);
 	}
-	return entries.sort();
+	return Array.from(set).sort();
 }
 
 function getRangeHours(range: RangeMatch) {
