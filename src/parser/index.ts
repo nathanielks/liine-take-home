@@ -96,7 +96,8 @@ function getDaysOfWeekForRange(
 	// NOTE: because ranges can overlap into the next week (eg Fri-Sun), we add 7
 	// to the end of the range and use a modulo to reset that value backwithin
 	// the 0-6 range of indexes.
-	const rangeEnd = dayOfTheWeekIndexes[endDay] + DAYS_IN_WEEK;
+	const _rangeEnd = dayOfTheWeekIndexes[endDay];
+	const rangeEnd = _rangeEnd < rangeStart ? _rangeEnd + 7 : _rangeEnd;
 	const set = new Set<TWeekdayIndex>();
 	for (let i = rangeStart; i <= rangeEnd; i++) {
 		set.add((i % 7) as TWeekdayIndex);
