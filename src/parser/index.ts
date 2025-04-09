@@ -51,7 +51,6 @@ type TimeRangeEntry = {
 export function generateRangeEntries(ranges: RangeMatch[]): TimeRangeEntry[] {
 	const entries: TimeRangeEntry[] = [];
 	for (const range of ranges) {
-		console.log("range", range);
 		const range0Days = getDaysOfWeekForRange(
 			range.range0Start,
 			range.range0End,
@@ -61,7 +60,6 @@ export function generateRangeEntries(ranges: RangeMatch[]): TimeRangeEntry[] {
 			range?.range1End,
 		);
 		const days = range0Days.concat(range1Days);
-		console.log(range0Days, range1Days, days);
 		for (const weekdayIndex of days) {
 			const openHours = getRangeHours(range);
 			for (const { weekdayOffset, time_open, time_closed } of openHours) {
@@ -74,7 +72,7 @@ export function generateRangeEntries(ranges: RangeMatch[]): TimeRangeEntry[] {
 			}
 		}
 	}
-	return entries;
+	return entries.sort((a, z) => a.weekday - z.weekday);
 }
 
 const dayOfTheWeekIndexes = {
@@ -91,7 +89,6 @@ function getDaysOfWeekForRange(
 	startDay?: TDayOfWeek,
 	endDay?: TDayOfWeek,
 ): TWeekdayIndex[] {
-	console.log("ehllo?", startDay, endDay);
 	if (!startDay) return [];
 	const rangeStart = dayOfTheWeekIndexes[startDay] as TWeekdayIndex;
 	if (!endDay) return [rangeStart];
@@ -100,10 +97,8 @@ function getDaysOfWeekForRange(
 	// to the end of the range and use a modulo to reset that value backwithin
 	// the 0-6 range of indexes.
 	const rangeEnd = dayOfTheWeekIndexes[endDay] + DAYS_IN_WEEK;
-	console.log("rangestart", rangeStart, "rangeEnd", rangeEnd);
 	const set = new Set<TWeekdayIndex>();
 	for (let i = rangeStart; i <= rangeEnd; i++) {
-		console.log("i", i, i % DAYS_IN_WEEK);
 		set.add((i % 7) as TWeekdayIndex);
 	}
 	return Array.from(set).sort();
@@ -113,14 +108,7 @@ function getRangeHours(range: RangeMatch) {
 	const { openTime, openPeriod, closeTime, closePeriod } = range;
 	const time_open = parseTime(openTime, openPeriod);
 	const time_closed = parseTime(closeTime, closePeriod);
-	if (
-		// If it's open in the morning and closes at a time before it opens, its the next day
-		(openPeriod === "am" && closePeriod === "am" && time_closed < time_open) ||
-		// If it's open at night and closes earlier, it's the next day
-		(openPeriod === "pm" && closePeriod === "pm" && time_open < time_closed) ||
-		// If it opens at night but closes in the morning, it's the next day
-		(openPeriod === "pm" && closePeriod === "am")
-	) {
+	if (time_closed < time_open) {
 		const items = [
 			{
 				time_open,
@@ -149,17 +137,16 @@ function getRangeHours(range: RangeMatch) {
 
 function parseTime(time: string, period: TTimePeriod) {
 	const [_hour, minutes] = time.split(":");
-	const hour = time.startsWith("12") && period === "am" ? 0 : Number(_hour);
+	const hour = time.startsWith("12") ? 0 : Number(_hour);
 	return hour * 100 + Number(minutes ?? 0) + (period === "pm" ? 1200 : 0);
 }
 
 export function parseRow(row: string[]) {
 	const [name, hours] = row;
-
-	// const ranges = parseHourRanges(hours);
-
+	const ranges = parseHourRanges(hours);
+	const entries = generateRangeEntries(ranges);
 	return {
 		name,
-		hours,
+		entries,
 	};
 }
