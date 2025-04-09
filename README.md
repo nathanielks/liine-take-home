@@ -19,5 +19,5 @@ curl http://localhost:3000/restaurants\?datetime=2025-04-09T18:59:36
 ## Notable files
  
 - [`/src/routes/restaurants/index.ts`](src/routes/restaurants/index.ts): route definition for `/restaurants` and where the query logic resides.
-- [`/src/parser/index.ts`]: the file where the parsing logic is located.
+- [`/src/parser/index.ts`](src/parser/index.ts): the file where the parsing logic is located.
 - [`/test/parser/index.test.ts`](test/parser/index.test.ts): the unit test file for testing parsing of the CSV file.
