@@ -7,8 +7,8 @@ import {
 
 interface TestItem {
 	enabled?: boolean;
-	input: any;
-	expectation: any;
+	input: string;
+	expectation: Record<string, any>[];
 }
 
 describe("CSV Parser", () => {
@@ -113,6 +113,21 @@ describe("CSV Parser", () => {
 
 	test("generates range objects", () => {
 		const tests: TestItem[] = [
+			{
+				input: "Fri 11:00 pm - 1:30 am",
+				expectation: [
+					{
+						weekday: 5,
+						time_open: 2300,
+						time_closed: 2400,
+					},
+					{
+						weekday: 6,
+						time_open: 0,
+						time_closed: 130,
+					},
+				],
+			},
 			{
 				input: "Mon 11:00 am - 10 pm",
 				expectation: [

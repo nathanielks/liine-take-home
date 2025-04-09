@@ -12,6 +12,8 @@ type RangeMatch = {
 	closePeriod: TTimePeriod;
 };
 
+const DAYS_IN_WEEK = 7;
+
 export function parseHourRanges(input: string): RangeMatch[] {
 	const dayOfTheWeekPattern = (index: number) =>
 		`(?:(?<range${index}Start>Sun|Mon|Tues|Wed|Thu|Fri|Sat)(?:-(?<range${index}End>Sun|Mon|Tues|Wed|Thu|Fri|Sat))?)`;
@@ -58,10 +60,19 @@ export function generateRangeEntries(ranges: RangeMatch[]): TimeRangeEntry[] {
 			range?.range1Start,
 			range?.range1End,
 		);
-		const hours = getRangeHours(range);
 		const days = range0Days.concat(range1Days);
-		console.log(range0Days, range1Days, hours, days);
-		entries.push(...days.map((weekday) => ({ weekday, ...hours })));
+		console.log(range0Days, range1Days, days);
+		for (const weekdayIndex of days) {
+			const openHours = getRangeHours(range);
+			for (const { weekdayOffset, time_open, time_closed } of openHours) {
+				entries.push({
+					weekday: ((weekdayIndex + weekdayOffset) %
+						DAYS_IN_WEEK) as TWeekdayIndex,
+					time_open,
+					time_closed,
+				});
+			}
+		}
 	}
 	return entries;
 }
@@ -88,12 +99,11 @@ function getDaysOfWeekForRange(
 	// NOTE: because ranges can overlap into the next week (eg Fri-Sun), we add 7
 	// to the end of the range and use a modulo to reset that value backwithin
 	// the 0-6 range of indexes.
-	const divisor = 7;
-	const rangeEnd = dayOfTheWeekIndexes[endDay] + divisor;
+	const rangeEnd = dayOfTheWeekIndexes[endDay] + DAYS_IN_WEEK;
 	console.log("rangestart", rangeStart, "rangeEnd", rangeEnd);
 	const set = new Set<TWeekdayIndex>();
 	for (let i = rangeStart; i <= rangeEnd; i++) {
-		console.log("i", i, i % divisor);
+		console.log("i", i, i % DAYS_IN_WEEK);
 		set.add((i % 7) as TWeekdayIndex);
 	}
 	return Array.from(set).sort();
@@ -103,10 +113,35 @@ function getRangeHours(range: RangeMatch) {
 	const { openTime, openPeriod, closeTime, closePeriod } = range;
 	const time_open = parseTime(openTime, openPeriod);
 	const time_closed = parseTime(closeTime, closePeriod);
-	return {
-		time_open,
-		time_closed,
-	};
+	if (
+		// If it's open in the morning and closes at a time before it opens, its the next day
+		(openPeriod === "am" && closePeriod === "am" && time_closed < time_open) ||
+		// If it's open at night and closes earlier, it's the next day
+		(openPeriod === "pm" && closePeriod === "pm" && time_open < time_closed) ||
+		// If it opens at night but closes in the morning, it's the next day
+		(openPeriod === "pm" && closePeriod === "am")
+	) {
+		return [
+			{
+				time_open,
+				time_closed: 2400,
+				weekdayOffset: 0,
+			},
+			{
+				time_open: 0,
+				time_closed,
+				weekdayOffset: 1,
+			},
+		];
+	}
+	// Otherwise it's all within the same day
+	return [
+		{
+			time_open,
+			time_closed,
+			weekdayOffset: 0,
+		},
+	];
 }
 
 function parseTime(time: string, period: TTimePeriod) {
